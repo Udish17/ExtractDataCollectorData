@@ -83,7 +83,7 @@ foreach($sourcefile in $sourcefiles){
         Expand-Tar $desttar "$dest"
         CleanHierarchy
         #remove the tar.gz
-        #Remove-Item -Path $sourcefile.Name -Recurse -Force
+        Remove-Item -Path $sourcefile.Name -Recurse -Force
     }
     else
     {
