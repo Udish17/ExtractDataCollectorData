@@ -1,5 +1,6 @@
-# This script will extract the tar file collected by the SCOM Linux Data Collector
+# This script will extract the tar file collected by the SCOM Linux Data Collector and OMS Agent Troubleshooter
 # https://github.com/Udish17/SCOMLinuxDataCollector
+# https://github.com/microsoft/OMS-Agent-for-Linux/blob/master/docs/Troubleshooting-Tool.md
 # Author: udmudiar (Udishman/Udish)
 
 function Expand-Tar($tarFile, $dest) {
@@ -18,7 +19,6 @@ function Expand-Tar($tarFile, $dest) {
         $ErrorMessage
     }    
 }
-
 
 function CleanHierarchy()
 {
@@ -82,7 +82,7 @@ foreach($sourcefile in $sourcefiles){
         $desttar = $dest + "\" + $tar
         Expand-Tar $desttar "$dest"
         CleanHierarchy
-        #remove the tar.gz
+        #remove the tar.gz or tgz file
         Remove-Item -Path $sourcefile.Name -Recurse -Force
     }
     else
