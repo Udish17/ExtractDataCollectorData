@@ -34,7 +34,7 @@ function CleanHierarchy()
     
             foreach($item in $items)
             {
-                if($item.Name -eq "SCXDetails.txt" -or $item.Name -eq "omsagent.log")
+                if($item.Name -eq "SCXDetails.txt" -or $item.Name -eq "OSDetails.txt" -or $item.Name -eq "omsagent.log") 
                 {
                     $copypath = $item.DirectoryName + "\*"
                     $removepath = $dest + "\" + $data.Name
