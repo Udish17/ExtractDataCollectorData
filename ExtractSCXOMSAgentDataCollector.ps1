@@ -25,32 +25,30 @@ function CleanHierarchy()
     Write-Host "`t Cleaning Hierarchy.." -ForegroundColor Cyan
     Start-Sleep 2
 
-    try{
-        $break = "False"
-        $data = Get-ChildItem -Path $dest -Exclude "*tar"
-        for($i = 1; $i -lt 10; $i++)
-        {
-            $items = Get-ChildItem -Path $data -Depth $i
-    
-            foreach($item in $items)
-            {
-                if($item.Name -eq "SCXDetails.txt" -or $item.Name -eq "OSDetails.txt" -or $item.Name -eq "omsagent.log") 
-                {
-                    $copypath = $item.DirectoryName + "\*"
-                    $removepath = $dest + "\" + $data.Name
-                    Copy-Item -Path $copypath -Destination $dest -Recurse -Force
-                    #remove the linux folder structure
-                    Remove-Item -Path $removepath -Recurse -Force
-                    #remove the tar file
-                    Remove-Item -Path $desttar -Force
-                    $break = "True"            
-                }
-            }  
-            if($break -eq "True")
-            {
-                break;
-            }     
-        } 
+    try{        
+        #complex logic. adding comments for future understanding
+        #we want to copy only the files collected by the data collector
+        #and not the hirerachy direcotries
+        #wso start with get the root directory where the data was collected
+        $rootdir = (Get-ChildItem -Path $dest -Directory).FullName
+
+        #from the dest directory get the depth count
+        $depth = Get-ChildItem $dest -Recurse -Name | ForEach-Object {($_.ToCharArray() | 
+            where-Object {$_ -eq '\'} | Measure-Object).Count} | Measure-Object -Maximum | ForEach-Object Maximum
+
+        Write-Host "Depth = $($depth)" -ForegroundColor Green
+
+        #3 depth is minimum as per the strucuture the data collector creates.
+        #copy path (from where we will copy our content at the end of the depth) is assigned by enumerating all the depths and selecting the last 1
+        $copypath = (Get-ChildItem -Path $rootdir -Directory -Depth ($depth - 3) | Select-Object -Last 1).FullName
+        #copy the content
+        Copy-Item -Path "$copypath\*" -Destination $dest -Recurse -Force
+        #remove the linux folder structure
+        Remove-Item -Path $rootdir -Recurse -Force
+        #remove the tar file
+        Remove-Item -Path $desttar -Force     
+        
+        
     }
     catch{
         $ErrorMessage = $_.Exception.Message
@@ -61,6 +59,7 @@ function CleanHierarchy()
 }
 
 #script starts here
+Write-Host "Script Started.." -ForegroundColor Green
 $sourcepath = (Get-Location).Path
 $sourcepath = $sourcepath + "\"
 $sourcefiles = Get-ChildItem -Path $sourcepath -Recurse -Include "*tar.gz" , "*tgz"
@@ -77,6 +76,7 @@ foreach($sourcefile in $sourcefiles){
         Write-Host "`t Extracting data.." -ForegroundColor Cyan
         Start-Sleep 2
 
+        #here we are extracting
         Expand-Tar "$tarfile" "$dest"
         $tar= (Get-ChildItem -Path "$dest").Name
         $desttar = $dest + "\" + $tar
@@ -87,11 +87,13 @@ foreach($sourcefile in $sourcefiles){
     }
     else
     {
-        Write-Warning "`t The destination path is already present. Looks the data is extracted. Exiting.."
+        Write-Warning "`t The destination path is already present. Looks the data is extracted. If you want to reextract, delete the extracted data and rerun the script. Exiting.."
         Start-Sleep 2
         Exit
     }
 }
+
+Write-Host "Script Ended.." -ForegroundColor Green
 
 
 
