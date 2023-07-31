@@ -38,17 +38,22 @@ function CleanHierarchy()
 
         Write-Host "Depth = $($depth)" -ForegroundColor Green
 
-        #3 depth is minimum as per the strucuture the data collector creates.
+        #3 depth is the typical depth as per the strucuture the data collector creates.
         #copy path (from where we will copy our content at the end of the depth) is assigned by enumerating all the depths and selecting the last 1
-        $copypath = (Get-ChildItem -Path $rootdir -Directory -Depth ($depth - 3) | Select-Object -Last 1).FullName
+        if($depth -ge 3){
+            $copypath = (Get-ChildItem -Path $rootdir -Directory -Depth ($depth - 3) | Select-Object -Last 1).FullName
+        }
+        #however, there can also be a depth of 2.
+        elseif($depth -eq 2){
+            $copypath = (Get-ChildItem -Path $rootdir -Directory -Depth ($depth - 2) | Select-Object -Last 1).FullName
+        }
+        
         #copy the content
         Copy-Item -Path "$copypath\*" -Destination $dest -Recurse -Force
         #remove the linux folder structure
         Remove-Item -Path $rootdir -Recurse -Force
         #remove the tar file
         Remove-Item -Path $desttar -Force     
-        
-        
     }
     catch{
         $ErrorMessage = $_.Exception.Message
