@@ -3,14 +3,28 @@
 # https://github.com/microsoft/OMS-Agent-for-Linux/blob/master/docs/Troubleshooting-Tool.md
 # Author: udmudiar (Udishman/Udish)
 
-function Expand-Tar($tarFile, $dest) {
+<#function Expand-Tar($file, $dest) {
 
     if (-not (Get-Command Expand-7Zip -ErrorAction Ignore)) {
         Install-Package -Scope CurrentUser -Force 7Zip4PowerShell > $null
     }
 
     try{
-        Expand-7Zip $tarFile $dest -ErrorAction Stop
+        Expand-7Zip $file $dest -ErrorAction Stop
+    }
+    catch
+    {
+        $ErrorMessage = $_.Exception.Message
+        Write-Warning "If the file path is too long we might fail. Not a FATAL error."
+        $ErrorMessage
+    }    
+}
+#>
+
+function Expand-Tar($file, $dest) {
+
+    try{
+        tar.exe xC $dest -f $file
     }
     catch
     {
@@ -53,7 +67,7 @@ function CleanHierarchy()
         #remove the linux folder structure
         Remove-Item -Path $rootdir -Recurse -Force
         #remove the tar file
-        Remove-Item -Path $desttar -Force     
+        #Remove-Item -Path $desttar -Force     
     }
     catch{
         $ErrorMessage = $_.Exception.Message
@@ -81,11 +95,13 @@ foreach($sourcefile in $sourcefiles){
         Write-Host "`t Extracting data.." -ForegroundColor Cyan
         Start-Sleep 2
 
+        New-Item -Name $setdestinationfolder -ItemType Directory -Force | Out-Null
         #here we are extracting
         Expand-Tar "$tarfile" "$dest"
-        $tar= (Get-ChildItem -Path "$dest").Name
-        $desttar = $dest + "\" + $tar
-        Expand-Tar $desttar "$dest"
+        #$tar= (Get-ChildItem -Path "$dest").Name
+        #$desttar = $dest + "\" + $tar
+        #Expand-Tar "$desttar" "$dest"
+        
         CleanHierarchy
         #remove the tar.gz or tgz file
         Remove-Item -Path $sourcefile.Name -Recurse -Force
